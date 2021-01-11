@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8 --collation-server=utf8_general_ci
+    restart: always
+    volumes:
+        - "$PWD/mysql/:/var/lib/mysql/"
+        - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    container_name: mysql 
+    environment:
+        - MYSQL_ROOT_PASSWORD=phprs
+        - MYSQL_DATABASE=nome_generico
+    healthcheck:
+        test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+        timeout: 20s
+        retries: 10
+  pma:
+    image: phpmyadmin/phpmyadmin
+    links:
+        - mysql:db
+    container_name: pma
+    ports:
+        - "8080:80"
+
+  php:
+    build: .
+    container_name: php
+    ports:
+        - "80:80"
+        - "443:443"
+    volumes:
+        - ./www:/var/www/html
+    links:
+        - mysql 
